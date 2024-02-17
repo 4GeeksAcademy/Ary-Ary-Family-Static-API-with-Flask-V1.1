@@ -34,12 +34,18 @@ class FamilyStructure:
 
 
     def add_member(self, member):
+        # Agrego las claves id y last name al dict member que recibí 
+        member["id"] = self._generate_id()
+        member["last_name"] = self.last_name
+        #Agregar member a la lista self.members
+        self._members.append(member)
         # Fill this method and update the return
+        return self._members
         pass
 
     def delete_member(self, id):
-        # Fill this method and update the return
-        pass
+        self._members = [item for item in self._members if id != item["id"]]
+        return self._members
 
     def get_member(self, id):
         """ 
@@ -50,6 +56,7 @@ class FamilyStructure:
         """
         results = [item for item in self._members if id == item["id"]]
         return results
+
 
     # This method is done, it returns a list with all the family members
     def get_all_members(self):
