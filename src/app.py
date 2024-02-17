@@ -11,34 +11,62 @@ from datastructures import FamilyStructure
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 CORS(app)
+jackson_family = FamilyStructure("Jackson")# Create the jackson family object
 
-# create the jackson family object
-jackson_family = FamilyStructure("Jackson")
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
-# generate sitemap with all your endpoints
+
+# Generate sitemap with all your endpoints
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/members', methods=['GET'])
+"""
+CRUD
+'/members GET - devuelve TODOS los integrantes
+'/members POST - Crea UNO integrantes
+'/members/<int:id_member> GET - devuelve UNO integrante
+'/members/<int:id_member> PUT - modifica UNO integrante
+'/members/<int:id_member> DELETE - borra UNO integrante
+"""
+
+@app.route('/members', methods=['GET','Post'])
 def handle_hello():
+    response_body={}
+    # This is how you can use the Family datastructure by calling its methods
+    if request.method == 'GET':
+        members = jackson_family.get_all_members()
+        response_body["hello"]= "world"
+        response_body["family"]= members
+        return response_body, 200
+    if request.method == 'POST':
+        response_body= {}
+        data = request.json # Recibo los datos del front (body)
+        results = jackson_family.add_member(data)
+        response_body["message"]= "Miembro agregado"
+        response_body["results"]= results
+        return response_body, 200
 
-    # this is how you can use the Family datastructure by calling its methods
-    members = jackson_family.get_all_members()
-    response_body = {
-        "hello": "world",
-        "family": members
-    }
+@app.route("/members/<int:id>",methods=["GET",'DELETE'])
+def handle_member(id):
+    if request.method == 'GET':
+        results = jackson_family.get_member(id)
+        if results == []:
+            response_body = {"message": "No encontrado"}
+            return response_body, 405
+        response_body = {"member": results}
+        return response_body, 200 
+    if request.method == 'DELETE':
+        results = jackson_family.delete_member(id)
+        response_body = {"message": "Eliminado",
+                        "result": results}
+        return response_body, 200 
 
-
-    return jsonify(response_body), 200
-
-# this only runs if `$ python src/app.py` is executed
+# This only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=True)
